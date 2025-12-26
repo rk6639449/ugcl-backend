@@ -1,107 +1,44 @@
+require("dotenv").config();
+
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
 
-const DB_FILE = path.join(__dirname, "db.json");
+// 🔗 MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
-/* ---------- helpers ---------- */
-function readDB() {
-  if (!fs.existsSync(DB_FILE)) {
-    return { players: [], teams: [], matches: [], captains: [] };
+// 🧱 Player Schema
+const PlayerSchema = new mongoose.Schema({
+  playerId: String,
+  name: String,
+  team: String,
+  imageUrl: String
+});
+
+const Player = mongoose.model("Player", PlayerSchema);
+
+// ✅ GET players
+app.get("/players", async (req, res) => {
+  const players = await Player.find();
+  res.json(players);
+});
+
+// ✅ POST player
+app.post("/players", async (req, res) => {
+  try {
+    const player = new Player(req.body);
+    await player.save();
+    res.status(201).json(player);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
-  return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
-}
-
-function writeDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-/* ---------- PLAYERS ---------- */
-
-// GET all players
-app.get("/players", (req, res) => {
-  const db = readDB();
-  res.json(db.players);
 });
 
-// ADD new player
-app.post("/players", (req, res) => {
-  const db = readDB();
-  const { id, playerId, name, team, imageUrl } = req.body;
-
-  if (!playerId || !name || !team) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
-
-  const exists = db.players.find(p => p.playerId == playerId);
-  if (exists) {
-    return res.status(409).json({ error: "Player already exists" });
-  }
-
-  const newPlayer = {
-    id: id || Date.now(),
-    playerId,
-    name,
-    team,
-    imageUrl
-  };
-
-  db.players.push(newPlayer);
-  writeDB(db);
-
-  res.status(201).json(newPlayer);
-});
-
-/* ---------- TEAMS ---------- */
-
-app.get("/teams", (req, res) => {
-  const db = readDB();
-  res.json(db.teams);
-});
-
-/* ---------- MATCHES ---------- */
-
-app.get("/matches", (req, res) => {
-  const db = readDB();
-  res.json(db.matches);
-});
-
-app.post("/matches", (req, res) => {
-  const db = readDB();
-  const match = { id: Date.now(), ...req.body };
-  db.matches.push(match);
-  writeDB(db);
-  res.status(201).json(match);
-});
-
-/* ---------- CAPTAINS ---------- */
-
-app.get("/captains", (req, res) => {
-  const db = readDB();
-  res.json(db.captains);
-});
-
-app.post("/captains", (req, res) => {
-  const db = readDB();
-  const captain = { id: Date.now(), ...req.body };
-  db.captains.push(captain);
-  writeDB(db);
-  res.status(201).json(captain);
-});
-
-/* ---------- HEALTH CHECK ---------- */
-app.get("/", (req, res) => {
-  res.send("UGCL Backend is running 🚀");
-});
-
-/* ---------- START ---------- */
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on", PORT));
