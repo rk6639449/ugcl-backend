@@ -99,7 +99,7 @@
 
 
             React.useEffect(() => {
-                fetch('http://localhost:3000/players')
+                fetch('https://ugcl-backend.onrender.com/players')
                     .then(res => res.json())
                     .then(data => setPlayers(data));
             }, []);
@@ -160,7 +160,7 @@
         function PlayerCard({ name, imageUrl, team }) {
             const [playerTeams, setPlayerTeams] = React.useState([]);
             React.useEffect(() => {
-                fetch('http://localhost:3000/teams')
+                fetch('https://ugcl-backend.onrender.com/teams')
                     .then(res => res.json())
                     .then(data => setPlayerTeams(data))
                     .catch(err => console.error('Fetch error:', err));
