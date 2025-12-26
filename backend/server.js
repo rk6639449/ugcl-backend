@@ -4,6 +4,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+// Import models from models.js
+const { Team, Player, Captain, Match } = require("./models");
+
 const app = express();
 
 // -------------------- MIDDLEWARE --------------------
@@ -18,45 +21,6 @@ mongoose
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
-
-// -------------------- SCHEMAS --------------------
-
-// TEAM
-const TeamSchema = new mongoose.Schema({
-  team: { type: String, required: true, unique: true },
-  team_s: String,
-  logo: String
-});
-const Team = mongoose.model("Team", TeamSchema);
-
-// PLAYER
-const PlayerSchema = new mongoose.Schema({
-  playerId: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  team: { type: String, required: true },
-  imageUrl: String
-});
-const Player = mongoose.model("Player", PlayerSchema);
-
-// CAPTAIN
-const CaptainSchema = new mongoose.Schema({
-  name: String,
-  team: String,
-  team_s :String,
-  avatar: String,
-  profileUrl: String
-});
-const Captain = mongoose.model("Captain", CaptainSchema);
-
-// MATCH
-const MatchSchema = new mongoose.Schema({
-  matchId : String,
-  team1: String,
-  team2: String,
-  date: String,
-  text: String
-});
-const Match = mongoose.model("Match", MatchSchema);
 
 // -------------------- ROUTES --------------------
 
