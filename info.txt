@@ -1,0 +1,5 @@
+3000-> captains
+3001 -> matches
+3002-> Teams
+3003->players
+json-server --watch db.json --port 3000

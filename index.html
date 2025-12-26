@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UGCL_React</title>
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="form.css">
+</head>
+
+<body>
+    <div class="js-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/supersimpledev/dayjs.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <script type="text/babel">
+
+        function Navbar() {
+            const [input, setInput] = React.useState('')
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [showFilters, setShowFilters] = React.useState(false)
+            function saveInput(e) {
+                setInput(e.target.value)
+            }
+            function handleSubmit(e) {
+                e.preventDefault();
+                setSearchTerm(input);
+
+            }
+            function onClose() {
+                setShowFilters(false);
+                setInput('');
+            }
+
+            return (
+                <>
+                    <nav className="navbar navbar-expand-lg bg-info-subtle">
+                        <div className="container-fluid">
+                            
+                            <a className="navbar-brand nav-link active" href="index.html"><img src="ugcl_logo.png" height="35" width="90" style={{objectFit:"cover"}} alt="..." /></a>
+                            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span className="navbar-toggler-icon"></span>
+                            </button>
+                            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="orgcomm.html">Organizing Commitee</a>
+
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Teams.html">Teams</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Matches.html">Matches</a>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="captains.html">Captains</a>
+                                    </li>
+                                </ul>
+                                <form className="d-flex" role="search" onSubmit={handleSubmit}>
+                                    <input className="form-control me-2" type="search" placeholder="Search by Player Name or ID . . ." aria-label="Search" size="30" onChange={saveInput} value={input} />
+                                    <button className="btn btn-outline-success" type="submit" onClick={() => setShowFilters(true)}>Search</button>
+                                </form>
+                            </div>
+                        </div>
+                    </nav>
+                    {showFilters && <SearchPlayer input={searchTerm} onClose={onClose} />}
+                </>
+            )
+        }
+
+        function SearchPlayer({ input, onClose }) {
+            const [players, setPlayers] = React.useState([]);
+
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')
+                    .then(res => res.json())
+                    .then(data => setPlayers(data));
+            }, []);
+
+            const term = input.toLowerCase();
+
+            const filteredPlayers = players.filter(player => {
+                if (!term) return false;
+                return (
+                    player.name.toLowerCase().includes(term) ||
+                    String(player.playerId).includes(term)
+                );
+            }
+            );
+
+
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {filteredPlayers.map((player) =>
+                        (
+                            <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                <PlayerCard
+                                    name={player.name}
+                                    imageUrl={player.imageUrl}
+                                    team={player.team}
+                                />
+                            </div>
+                        )
+                        )}
+
+
+
+                    </div>
+                </div >
+
+            );
+        }
+
+        function PlayerCard({ name, imageUrl, team }) {
+            const [playerTeams, setPlayerTeams] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setPlayerTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!playerTeams.length) {
+                return null;
+            }
+            const team_s = playerTeams.find(playerTeam => playerTeam.team === team)?.team_s || '';
+            return (
+                <div className="card" style={{ height: '20em', width: '17em' }}>
+                    <img
+                        src={imageUrl || "DefCap.png"}   // fallback if no image
+                        className="card-img-top"
+                        alt={name}
+                        style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                    />
+                    <div className="card-body" style={{ display: "flex", padding: "0.25rem" }}>
+                        <img src={`./images/team_img/${team_s}.png`} width="30" height="30" />
+                        <h5 className="card-title">{name}</h5>
+                    </div>
+                </div>
+            );
+        }
+
+        function IsMatchStart(currentTime, currentDate) {
+            return currentTime === "10:00:00" ? (currentDate === "January 10" ? "livematch.png" : "..") : "..";
+        }
+
+        function MatchScore({ match_text, currentDateTime }) {
+            const currentTime = currentDateTime.format('HH:mm:ss');
+            const currentDate = currentDateTime.format('MMMM D');
+            return (
+                <>
+                    <div className="card" style={{ width: '18em' }}>
+                        <img src="livematch.png" className="card-img-top" alt="..." />
+                        <div className="card-body">
+                            <h5 className="card-title">{match_text}</h5>
+                            <p className="card-text">Check below Scorecard
+                            </p>
+                            <a href="https://cricheroes.com/scorecard/19705965/ug-champions-league-2025/chemical-reactors-vs-mechanical-titans/summary"
+                                target="_blank" className="btn bg-info-subtle text-info-emphasis">View Scorecard</a>
+                        </div>
+                    </div>
+                </>
+            )
+        }
+
+        function Slider() {
+            return (
+                <>
+                    <div id="carouselExampleAutoplaying" className="carousel slide" data-bs-ride="carousel" style={{ width: "60vw", height: "40vh", position: "absolute", right: "3vw" }} >
+                        <div className="carousel-inner m-0" >
+                            <div className="carousel-item active"  >
+                                <img src="./images/spot_img/1.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                            <div className="carousel-item" >
+                                <img src="./images/spot_img/2.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                            <div className="carousel-item" >
+                                <img src="./images/spot_img/3.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                            <div className="carousel-item" >
+                                <img src="./images/spot_img/4.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                            <div className="carousel-item" >
+                                <img src="./images/spot_img/5.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                            <div className="carousel-item" >
+                                <img src="./images/spot_img/6.jpeg" className="d-block natural-size-img" alt="..." />
+                            </div>
+                        </div>
+                        <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+                            <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span className="visually-hidden">Previous</span>
+                        </button>
+                        <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+                            <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span className="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </>
+            )
+        }
+
+        function TextAbt() {
+            return (
+                <div style={{ width: "35vw" }}>
+                    <nav style={{ borderRadius: "10px" }} id="navbar-example2" className="navbar bg-body-tertiary px-3 mb-3" >
+                        <a className="navbar-brand" href="#">About UGCL</a>
+                        <ul className="nav nav-pills custom-pills ">
+                            <li className="nav-item">
+                                <a className="nav-link " href="#scrollspyHeading1">Overview</a>
+                            </li>
+                            <li className="nav-item">
+                                <a className="nav-link" href="#scrollspyHeading2">Venue</a>
+                            </li>
+                            <li className="nav-item dropdown">
+                                <a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">More</a>
+                                <ul className="dropdown-menu">
+                                    <li><a className="dropdown-item" href="#scrollspyHeading3">Format</a></li>
+                                    <li><hr className="dropdown-divider" /></li>
+                                    <li><a className="dropdown-item" href="#scrollspyHeading4">Stats</a></li>
+                                    <li><hr className="dropdown-divider" /></li>
+
+                                    <li><a className="dropdown-item" href="#scrollspyHeading5">Media</a></li>
+                                    <li><hr className="dropdown-divider" /></li>
+                                    <li><a className="dropdown-item" href="#scrollspyHeading6">TakeAways</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" className="scrollspy-example bg-body-tertiary p-3 rounded-2" tabIndex="0" style={{ height: "40vh", overflow: "scroll", overflowX: "auto", borderRadius: "10px" }}>
+                        <h4 id="scrollspyHeading1">Overview</h4>
+                        <p>The Under Graduate Cricket League (UGCL) tournament at IIT Kanpur was a dedicated cricketing event exclusively for freshers, played between department-wise teams. The tournament provided first-year students with a competitive yet welcoming platform to showcase their cricketing skills while building connections within and across departments.</p>
+                        <h4 id="scrollspyHeading2">Venue</h4>
+                        <p>All UGCL matches were hosted at the Hall 13 Ground, IIT Kanpur. The ground offered a lively and professional playing environment, allowing freshers to experience organized competitive cricket early in their campus life. The venue witnessed enthusiastic participation from players and strong support from fellow students.</p>
+                        <h4 id="scrollspyHeading3">Format</h4>
+                        <p>Unlike inter-hall formats, UGCL followed a department-based team structure, encouraging unity and coordination among students from the same academic streams. This format added a unique competitive edge, as departments battled not only for victory but also for pride and recognition within the institute.</p>
+                        <h4 id="scrollspyHeading4">Match Statistics</h4>
+                        <p>A key highlight of the UGCL tournament was its complete digital recordkeeping on CricHeroes. All match statistics—including runs, wickets, strike rates, and scorecards—were systematically recorded, ensuring transparency and easy access for players and followers. This professional approach elevated the overall standard of the tournament.</p>
+                        <h4 id="scrollspyHeading5">Live Recording</h4>
+                        <p>To further enhance visibility and engagement, match recordings were made available on the official YouTube channel. These recordings allowed players to relive key moments, analyze performances, and share their cricketing journey with friends and family, adding a lasting digital footprint to the tournament.</p>
+                        <h4 id="scrollspyHeading6">TakeAways</h4>
+                        <p>The UGCL tournament at Hall 13 Ground, IIT Kanpur, successfully combined competitive cricket with modern digital coverage and freshers-focused participation. With department-wise teams, complete CricHeroes statistics, and official YouTube recordings, UGCL set a strong benchmark for organized student-led sports events at IIT Kanpur.</p>
+                    </div>
+                </div>
+            )
+        }
+
+        function App() {
+            const [currentDateTime, setCurrentDateTime] = React.useState(dayjs());
+
+            return (
+                <>
+                    <Navbar />
+                    <div className="d-flex justify-content-center m-4">
+                        <Timer
+                            currentDateTime={currentDateTime}
+                            setCurrentDateTime={setCurrentDateTime} />
+                    </div>
+                    <div className="d-flex justify-content-around mb-5" style={{ backgroundImage: "url(super-8.png)",backgroundSize:"contain",backgroundRepeat:"space" }}>
+                        <MatchScore match_text="Last Match" currentDateTime={currentDateTime} />
+                        <MatchScore match_text="Live Match" currentDateTime={currentDateTime} />
+                        <MatchScore match_text="Next Match" currentDateTime={currentDateTime} />
+                    </div>
+                    <hr />
+                    <div className="d-flex m-5">
+                        <TextAbt />
+                        <Slider />
+                    </div>
+                    <hr />
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10vw", margin: "50px" }}>
+                        <div style={{ width: "568px", height: "323px", border: "4px solid #ccf7ff", borderRadius: "10px" }}>
+                            <iframe width="560" height="315" src="https://www.youtube.com/embed/mOJ6g321jAA?si=6dFmoCJksk6czna6&autoplay=1&mute=1" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+                        </div>
+                        <div className="message" style={{ maxWidth: "30vw", border: "4px solid #ccf7ff", borderRadius: "10px", padding: "10px" }} aria-live="assertive" aria-atomic="true">
+                            <div className="toast-header">
+                                <img src="ugcl_logo.png" height="25" width="25" className="rounded me-2" alt="..." />
+                                <strong className="me-auto">UGCL</strong>
+                                <small>Few days ago...</small>
+
+                            </div>
+                            <div className="toast-body">
+                                Mechanical Titans won the toss and chose to bowl first, signaling a clear strategy to chase under lights and put early pressure on the Chemical Reactors’ batting lineup. The decision set the tone for a tactical first innings, with every over shaping the balance of the game and adding to the intensity of this crucial group-stage encounter.
+                            </div>
+                        </div>
+                    </div>
+                    <Footer />
+                </>
+            )
+        }
+
+        function Timer({ currentDateTime, setCurrentDateTime }) {
+
+
+            React.useEffect(() => {
+                const interval = setInterval(() => {
+                    setCurrentDateTime(dayjs());
+                }, 1000);
+
+                return () => clearInterval(interval); // Cleanup on unmount
+            }, [setCurrentDateTime]);
+
+            const currentDate = currentDateTime.format('MMMM D');
+            const currentTime = currentDateTime.format('HH:mm:ss');
+
+            return (
+                <>
+                    <strong>
+                        {currentDate} {currentTime}
+
+                    </strong>    </>
+            );
+        }
+
+        function Footer() {
+            return (
+                <div className="card text-center bg-info-subtle">
+                    <div className="card-header">
+                        <i className="fa-regular fa-copyright"></i> Copyright UGCL 2025
+                    </div>
+                    <div className="card-body">
+                        <p className="card-text">Designed and Developed by</p>
+                        <h5 className="card-title">Rohit Kumar</h5>
+                        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+
+                            <a href="https://www.instagram.com/secretclasher?igsh=bWI2YW5IYXRzdGd6" className="icon-link"> <i className="fa-brands fa-instagram"></i></a>
+                            <a href="https://www.linkedin.com/in/rohit-kumar-195357394" className="icon-link"><i className="fa-brands fa-linkedin"></i></a>
+                        </div>
+                    </div>
+                    <div className="card-footer text-body-secondary">
+                        Updated Few Days Ago
+                    </div>
+                </div>
+            )
+        }
+
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(<App />);
+    </script>
+</body>
+
+</html>

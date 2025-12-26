@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UGCL_React</title>
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+        rel="stylesheet">
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="form.css">
+</head>
+
+<body>
+    <div class="js-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/supersimpledev/dayjs.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <script type="text/babel">
+
+        function Navbar() {
+            const [input, setInput] = React.useState('')
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [showFilters, setShowFilters] = React.useState(false)
+            function saveInput(e) {
+                setInput(e.target.value)
+            }
+            function handleSubmit(e) {
+                e.preventDefault();
+                setSearchTerm(input);
+
+            }
+            function onClose() {
+                setShowFilters(false);
+                setInput('');
+            }
+
+            return (
+                <>
+                    <nav className="navbar navbar-expand-lg bg-info-subtle">
+                        <div className="container-fluid">
+
+                            <a className="navbar-brand nav-link active" href="index.html"><img src="ugcl_logo.png" height="35" width="90" style={{ objectFit: "cover" }} alt="..." /></a>
+                            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span className="navbar-toggler-icon"></span>
+                            </button>
+                            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="orgcomm.html">Organizing Commitee</a>
+
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Teams.html">Teams</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Matches.html">Matches</a>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="captains.html">Captains</a>
+                                    </li>
+                                </ul>
+                                <form className="d-flex" role="search" onSubmit={handleSubmit}>
+                                    <input className="form-control me-2" type="search" placeholder="Search by Player Name or ID . . ." aria-label="Search" size="30" onChange={saveInput} value={input} />
+                                    <button className="btn btn-outline-success" type="submit" onClick={() => setShowFilters(true)}>Search</button>
+                                </form>
+                            </div>
+                        </div>
+                    </nav>
+                    {showFilters && <SearchPlayer input={searchTerm} onClose={onClose} />}
+                </>
+            )
+        }
+
+        function SearchPlayer({ input, onClose }) {
+            const [players, setPlayers] = React.useState([]);
+
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')
+                    .then(res => res.json())
+                    .then(data => setPlayers(data));
+            }, []);
+
+            const term = input.toLowerCase();
+
+            const filteredPlayers = players.filter(player => {
+                if (!term) return false;
+                return (
+                    player.name.toLowerCase().includes(term) ||
+                    String(player.playerId).includes(term)
+                );
+            }
+            );
+
+
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {filteredPlayers.map((player) =>
+                        (
+                            <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                <PlayerCard
+                                    name={player.name}
+                                    imageUrl={player.imageUrl}
+                                    team={player.team}
+                                />
+                            </div>
+                        )
+                        )}
+
+
+
+                    </div>
+                </div >
+
+            );
+        }
+
+        function PlayerCard({ name, imageUrl, team }) {
+            const [playerTeams, setPlayerTeams] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setPlayerTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!playerTeams.length) {
+                return null;
+            }
+            const team_s = playerTeams.find(playerTeam => playerTeam.team === team)?.team_s || '';
+            return (
+                <div className="card" style={{ height: '20em', width: '17em' }}>
+                    <img
+                        src={imageUrl || "DefCap.png"}   // fallback if no image
+                        className="card-img-top"
+                        alt={name}
+                        style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                    />
+                    <div className="card-body" style={{ display: "flex", padding: "0.25rem" }}>
+                        <img src={`./images/team_img/${team_s}.png`} width="30" height="30" />
+                        <h5 className="card-title">{name}</h5>
+                    </div>
+                </div>
+            );
+        }
+
+        function ComiteeCard({ name, imageUrl }) {
+
+            return (
+                <>
+                    <div className="card" style={{ height: '20em', width: '17em', border: "2px solid #ccf7ff" }}>
+                        <img
+                            src={imageUrl || "DefCap.png"}   // fallback if no image
+                            className="card-img-top"
+                            alt={name}
+                            style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                        />
+                        <div className="card-body" style={{ display: "flex", padding: "0.25rem", justifyContent: "center" }}>
+                            <h5 className="card-title" >{name}</h5>
+                        </div>
+
+                    </div>
+                    <hr />
+                </>
+            );
+        }
+
+
+        /*function Container() {
+            return (
+                <>
+                    <div className="container" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <h2>Head</h2>
+                        <div>
+
+                            <ComiteeCard name="Ankit Agrawal" imageUrl="./images/org_img/ANKIT AGRAWAL.jpg" />
+                        </div>
+                        <h2>President and Vice President</h2>
+                        <div style={{width:"100%" ,display: "flex", justifyContent: "space-around" }}>
+
+                            <ComiteeCard name="Ankit Agrawal" imageUrl="./images/org_img/ANKIT AGRAWAL.jpg" style={{flex: 1, maxWidth: "300px"}} />
+                            <ComiteeCard name="Ankit Agrawal" imageUrl="./images/org_img/ANKIT AGRAWAL.jpg" style={{flex: 1, maxWidth: "300px"}} />
+                        </div>
+                    </div>
+                </>
+            )
+        }
+        */
+        function Container() {
+            return (
+                <div className="container py-4" style={{
+                    fontFamily: "'Ubuntu', system-ui",
+                    fontWeight: "400",
+                    fontStyle: "normal",
+                    border: " 3px solid #ccf7ff",
+                    marginTop: "20px",
+                    borderRadius: "10px"
+                }}>
+                    <div className="text-center mb-5 " style={{ display: "flex", flexDirection: "column", gap: "5vh" }}>
+                        <h2>Head</h2>
+                        <div className="col-lg-4 mx-auto" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                            <ComiteeCard name="Ankit Agrawal" imageUrl="./images/org_img/ANKIT AGRAWAL.jpg" />
+                        </div>
+                    </div>
+                    <hr />
+                    <div className="text-center mb-5" style={{ display: "flex", flexDirection: "column", gap: "5vh" }}>
+                        <h2>President & Vice President</h2>
+                        <div className="row justify-content-center g-4">
+                            <div className="col-md-5 col-lg-4" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="Ashutosh Choudhary" imageUrl="./images/org_img/ashutosh.jpg" />
+                            </div>
+                            <div className="col-md-5 col-lg-4" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="Vichitra Vishal" imageUrl="./images/org_img/vishal.jpg" />
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div className="text-center mb-5" style={{ display: "flex", flexDirection: "column", gap: "5vh" }}>
+                        <h2>Secretarys</h2>
+                        <div className="row justify-content-center g-4">
+                            <div className="col-md-3" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="Rohit Kumar" imageUrl="./images/org_img/rohit.jpg" />
+                            </div>
+                            <div className="col-md-3 " style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="Vadthya Anish Raj" imageUrl="./images/org_img/anish.jpg" />
+                            </div>
+                            <div className="col-md-3 " style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="___Vacant___" imageUrl="DefCap.png" />
+                            </div>
+                            <div className="col-md-3 " style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <ComiteeCard name="___Vacant___" imageUrl="DefCap.png" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="accordion" id="accordionExample">
+                        <div className="accordion-item">
+                            <h2 className="accordion-header">
+                                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    "Join the UGCL'25 OC Action! 🚀 Contacts Inside!"
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" className="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                                <div className="accordion-body">
+                                    1. Ashutosh Choudhary (President)  :  <i class="fa-solid fa-phone"></i> +91 87408 30784
+                                    <hr />
+                                    2. Vichitra Vishal (Vice President) : <i class="fa-solid fa-phone"></i> +91 93682 15930
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+
+        function OrgPage() {
+            return (
+                <>
+                    <Navbar />
+
+                    <Container />
+                </>
+
+
+            )
+        }
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(<OrgPage />);
+    </script>
+</body>
+
+</html>

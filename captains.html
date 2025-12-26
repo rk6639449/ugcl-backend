@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Captains_react</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="js-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
+        integrity="sha384-G/EV+4j2dNv+tEPo3 ++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <script type="text/babel">
+
+        function Navbar() {
+            const [input, setInput] = React.useState('')
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [showFilters, setShowFilters] = React.useState(false)
+            function saveInput(e) {
+                setInput(e.target.value)
+            }
+            function handleSubmit(e) {
+                e.preventDefault();
+                setSearchTerm(input);
+
+            }
+            function onClose() {
+                setShowFilters(false);
+                setInput('');
+            }
+
+            return (
+                <>
+                    <nav className="navbar navbar-expand-lg bg-info-subtle">
+                        <div className="container-fluid">
+
+                            <a className="navbar-brand nav-link active" href="index.html"><img src="ugcl_logo.png" height="35" width="90" style={{ objectFit: "cover" }} alt="..." /></a>
+                            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span className="navbar-toggler-icon"></span>
+                            </button>
+                            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="orgcomm.html">Organizing Commitee</a>
+
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Teams.html">Teams</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Matches.html">Matches</a>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="captains.html">Captains</a>
+                                    </li>
+                                </ul>
+                                <form className="d-flex" role="search" onSubmit={handleSubmit}>
+                                    <input className="form-control me-2" type="search" placeholder="Search by Player Name or ID . . ." aria-label="Search" size="30" onChange={saveInput} value={input} />
+                                    <button className="btn btn-outline-success" type="submit" onClick={() => setShowFilters(true)}>Search</button>
+                                </form>
+                            </div>
+                        </div>
+                    </nav>
+                    {showFilters && <SearchPlayer input={searchTerm} onClose={onClose} />}
+                </>
+            )
+        }
+
+        function SearchPlayer({ input, onClose }) {
+            const [players, setPlayers] = React.useState([]);
+
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')
+                    .then(res => res.json())
+                    .then(data => setPlayers(data));
+            }, []);
+
+            const term = input.toLowerCase();
+
+            const filteredPlayers = players.filter(player => {
+                if (!term) return false;
+                return (
+                    player.name.toLowerCase().includes(term) ||
+                    String(player.playerId).includes(term)
+                );
+            }
+            );
+
+
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {filteredPlayers.map((player) =>
+                        (
+                            <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                <PlayerCard
+                                    name={player.name}
+                                    imageUrl={player.imageUrl}
+                                    team={player.team}
+                                />
+                            </div>
+                        )
+                        )}
+
+
+
+                    </div>
+                </div >
+
+            );
+        }
+
+        function PlayerCard({ name, imageUrl, team }) {
+            const [playerTeams, setPlayerTeams] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setPlayerTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!playerTeams.length) {
+                return null;
+            }
+            const team_s = playerTeams.find(playerTeam => playerTeam.team === team)?.team_s || '';
+            return (
+                <div className="card" style={{ height: '20em', width: '17em' }}>
+                    <img
+                        src={imageUrl || "DefCap.png"}   // fallback if no image
+                        className="card-img-top"
+                        alt={name}
+                        style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                    />
+                    <div className="card-body" style={{ display: "flex", padding: "0.25rem" }}>
+                        <img src={`./images/team_img/${team_s}.png`} width="30" height="30" />
+                        <h5 className="card-title">{name}</h5>
+                    </div>
+                </div>
+            );
+        }
+
+        function CaptainImage({ name, team, profileUrl, avatar, team_s }) {
+            return (
+                <>
+                    <div className="card " style={{ width: '18em', border: "2px solid #ccf7ff" }}>
+                        <img src={`${avatar}`} className="card-img-top" alt="..." />
+                        <div className="card-body">
+                            <h5 className="card-title">{name}</h5>
+                            <li className="list-group-item"><img src={`./images/team_img/${team_s}.png`} height="30px" />{team}</li>
+                            <p className="card-text"></p>
+                            <a href={profileUrl} className="btn btn-outline-info">CricHeroes
+                                Profile</a>
+                        </div>
+                    </div>
+                </>
+
+            )
+        }
+
+        function CaptainPage() {
+            const [captains, setCaptains] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/captains')  // json-server endpoint
+                    .then(res => res.json())
+                    .then(data => setCaptains(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!captains.length) {
+                return null; // or simple text: return <div>Loading matches...</div>;
+            }
+            return (
+                <>
+                    <Navbar />
+                    <div className="container py-4">
+                        <div className="row justify-content-center g-4">
+                            {captains.map((c) => (
+                                <div key={c.id} className="col-12 col-sm-6 col-md-3">
+                                    <CaptainImage
+                                        name={c.name}
+                                        team={c.team}
+                                        profileUrl={c.profileUrl}
+                                        avatar={c.avatar}
+                                        team_s={c.team_s} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(<CaptainPage />);
+    </script>
+</body>
+
+</html>

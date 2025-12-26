@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UGCL_React</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="form.css">
+</head>
+
+<body>
+    <div class="js-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/supersimpledev/dayjs.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <script type="text/babel">
+        function Navbar() {
+            const [input, setInput] = React.useState('')
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [showFilters, setShowFilters] = React.useState(false)
+            function saveInput(e) {
+                setInput(e.target.value)
+            }
+            function handleSubmit(e) {
+                e.preventDefault();
+                setSearchTerm(input);
+
+            }
+            function onClose() {
+                setShowFilters(false);
+                setInput('');
+            }
+
+            return (
+                <>
+                    <nav className="navbar navbar-expand-lg bg-info-subtle">
+                        <div className="container-fluid">
+
+                            <a className="navbar-brand nav-link active" href="index.html"><img src="ugcl_logo.png" height="35" width="90" style={{ objectFit: "cover" }} alt="..." /></a>
+                            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span className="navbar-toggler-icon"></span>
+                            </button>
+                            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="orgcomm.html">Organizing Commitee</a>
+
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Teams.html">Teams</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Matches.html">Matches</a>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="captains.html">Captains</a>
+                                    </li>
+                                </ul>
+                                <form className="d-flex" role="search" onSubmit={handleSubmit}>
+                                    <input className="form-control me-2" type="search" placeholder="Search by Player Name or ID . . ." aria-label="Search" size="30" onChange={saveInput} value={input} />
+                                    <button className="btn btn-outline-success" type="submit" onClick={() => setShowFilters(true)}>Search</button>
+                                </form>
+                            </div>
+                        </div>
+                    </nav>
+                    {showFilters && <SearchPlayer input={searchTerm} onClose={onClose} />}
+                </>
+            )
+        }
+
+        function SearchPlayer({ input, onClose }) {
+            const [players, setPlayers] = React.useState([]);
+
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')
+                    .then(res => res.json())
+                    .then(data => setPlayers(data));
+            }, []);
+
+            const term = input.toLowerCase();
+
+            const filteredPlayers = players.filter(player => {
+                if (!term) return false;
+                return (
+                    player.name.toLowerCase().includes(term) ||
+                    String(player.playerId).includes(term)
+                );
+            }
+            );
+
+
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {filteredPlayers.map((player) =>
+                        (
+                            <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                <PlayerCard
+                                    name={player.name}
+                                    imageUrl={player.imageUrl}
+                                    team={player.team}
+                                />
+                            </div>
+                        )
+                        )}
+
+
+
+                    </div>
+                </div >
+
+            );
+        }
+
+        function TeamCard({ team, logo, onTeamClick }) {
+            return (
+                <div className="card" style={{ width: '18em' }}>
+                    <img src={logo} className="card-img-top" alt="..." onClick={onTeamClick}
+                        style={{ cursor: 'pointer' }} name={team} />
+                    <div className="card-body">
+                        <h5 className="card-title" >{team}</h5>
+                    </div>
+                </div>
+            )
+        }
+
+        function FormComponent({ signInClose }) {
+            const [formData, setFormData] = React.useState({
+                name: "",
+                team: "",
+                playerId: "",
+                image: null
+            });
+
+            const [loading, setLoading] = React.useState(false);
+            const [previewUrl, setPreviewUrl] = React.useState("");
+
+            const handleChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value
+                });
+            };
+
+            const CLOUD_NAME = "dhywxti3y";
+            const UPLOAD_PRESET = "is4qolvu";
+
+            const handleSubmit = async (e) => {
+                e.preventDefault(); // important: keep this on the form submit
+                setLoading(true);
+
+                try {
+                    if (!formData.image) {
+                        alert("Please select an image");
+                        setLoading(false);
+                        return;
+                    }
+
+                    const cloudinaryData = new FormData();
+                    cloudinaryData.append("file", formData.image);
+                    cloudinaryData.append("upload_preset", UPLOAD_PRESET);
+
+                    const uploadRes = await fetch(
+                        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                        {
+                            method: "POST",
+                            body: cloudinaryData
+                        }
+                    );
+
+                    if (!uploadRes.ok) {
+                        throw new Error("Image upload to Cloudinary failed");
+                    }
+
+                    const uploadJson = await uploadRes.json();
+                    const imageUrl = uploadJson.secure_url;
+
+                    const playerRes = await fetch('http://localhost:3000/players', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: formData.playerId,
+                            playerId: formData.playerId,
+                            name: formData.name,
+                            team: formData.team,
+                            imageUrl: imageUrl
+                        })
+                    });
+
+                    if (!playerRes.ok) {
+                        throw new Error("Saving player to json-server failed");
+                    }
+
+                    alert("Data saved!");
+                    setFormData({ name: "", team: "", playerId: "", image: null });
+                    setPreviewUrl("");
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            function previewImage(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    setFormData((prev) => ({ ...prev, image: file }));
+                    setPreviewUrl(URL.createObjectURL(file));
+                }
+            }
+
+            return (
+                <div className="signForm">
+                    <div className="form-dibba">
+                        {/* put onSubmit on the form, not on a div */}
+                        <form onSubmit={handleSubmit}>
+                            <h1>Player Registration</h1>
+
+                            <div className="input-dibba">
+                                <label
+                                    htmlFor="playerName"
+                                    className="input-dibba-label"
+                                >
+                                    Enter Player Name :
+                                </label>
+                                <input
+                                    id="playerName"
+                                    placeholder="Enter Player Name"
+                                    type="text"
+                                    name="name"
+                                    className="input-dibba-box"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="input-dibba">
+                                <label
+                                    htmlFor="playerId"
+                                    className="input-dibba-label"
+                                >
+                                    Enter Player Id ( as of CricHeroes ) :
+                                </label>
+                                <input
+                                    id="playerId"
+                                    placeholder="Enter Player Id"
+                                    type="text"
+                                    name="playerId"
+                                    className="input-dibba-box"
+                                    value={formData.playerId}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="input-dibba">
+                                <label
+                                    htmlFor="playerTeam"
+                                    className="input-dibba-label"
+                                >
+                                    Player Team ( in Super-8 )
+                                </label>
+                                <select
+                                    id="playerTeam"
+                                    className="input-dibba-box"
+                                    name="team"
+                                    value={formData.team}
+                                    onChange={handleChange}
+                                >
+                                    <option value="">Select a team</option>
+                                    <option value="CSE RunTime Smashers">CSE RunTime Smashers</option>
+                                    <option value="Mechanical Titans">Mechanical Titans</option>
+                                    <option value="Civil Conquerors">Civil Conquerors</option>
+                                    <option value="Chemical Reactors">Chemical Reactors</option>
+                                    <option value="Electrical Chargers">Electrical Chargers</option>
+                                    <option value="Chemistry Bond Breakers">Chemistry Bond Breakers</option>
+                                    <option value="Physics Challengers">Physics Challengers</option>
+                                    <option value="Earth Quakers">Earth Quakers</option>
+                                </select>
+                            </div>
+
+                            <div className="input-dibba">
+                                <label
+                                    htmlFor="playerImage"
+                                    className="input-dibba-label"
+                                >
+                                    Player Image :
+                                </label>
+                                {/* onChange must be on the input, not label */}
+                                <input
+                                    id="playerImage"
+                                    name="image"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={previewImage}
+                                />
+                            </div>
+
+                            {/* no onChange here; submit is handled by form onSubmit */}
+                            <div id="input-dibba-submit">
+                                <input
+                                    type="submit"
+                                    id="submitBtn"
+                                    value={loading ? "Submitting..." : "Submit"}
+                                    disabled={loading}
+                                />
+                            </div>
+                        </form>
+                    </div>
+                    <div className="poster" >
+                        <div className="img"></div>
+                        <button className="btn btn-close float-end" onClick={signInClose} style={{
+                            position: "absolute",
+                            right: "8px",
+                            top: "8px",
+                            zIndex: 9999
+                        }} ></button>
+                    </div>
+
+                </div>
+            );
+        }
+
+        function SignUpDiv({ onbtnClick }) {
+            return (
+
+                <div style={{
+                    width: "50vw",
+                    height: "60px",
+                    border: "2px solid grey",
+                    borderRadius: "5px",
+                    margin: "auto",
+                    marginTop: "10px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "20px"
+                }}>
+                    <span><h5>Want to Register a Player ?</h5></span>
+                    <button className="bg-info-subtle" style={{ width: "100px", height: "40px", borderRadius: "5px", fontSize: "1rem" }} onClick={onbtnClick}>Sign Up</button>
+                </div>
+
+            )
+        }
+
+
+        function PlayerCard({ name, imageUrl, team }) {
+            const [playerTeams, setPlayerTeams] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setPlayerTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!playerTeams.length) {
+                return null;
+            }
+            const team_s = playerTeams.find(playerTeam => playerTeam.team === team)?.team_s || '';
+            return (
+                <div className="card" style={{ height: '20em', width: '17em' }}>
+                    <img
+                        src={imageUrl || "DefCap.png"}   // fallback if no image
+                        className="card-img-top"
+                        alt={name}
+                        style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                    />
+                    <div className="card-body" style={{ display: "flex", padding: "0.25rem" }}>
+                        <img src={`./images/team_img/${team_s}.png`} width="30" height="30" />
+                        <h5 className="card-title">{name}</h5>
+                    </div>
+                </div>
+            );
+        }
+
+        function TeamPlayers({ onClose, team }) {
+            const [players, setPlayers] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')  // json-server endpoint
+                    .then(res => res.json())
+                    .then(data => setPlayers(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!players.length) {
+                return null; // or simple text: return <div>Loading matches...</div>;
+            }
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {players.map((player) =>
+                            player.team === team && (
+                                <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                    <PlayerCard
+                                        name={player.name}
+                                        imageUrl={player.imageUrl}
+                                        team={player.team}  // <— use URL from JSON
+                                    />
+                                </div>
+                            )
+                        )}
+
+
+
+                    </div>
+                </div >
+            )
+        }
+
+        function TeamPage() {
+            const [teams, setTeams] = React.useState([]);
+            const [showPlayers, setShowPlayers] = React.useState(false);
+            const [teamName, setTeamName] = React.useState('')
+            const [signIn, setSignIn] = React.useState(false);
+
+            function onbtnClick() {
+                setSignIn(true);
+            }
+            function signInClose() {
+                setSignIn(false);
+            }
+            const handleTeamClick = (event) => {
+                const team = (event.target.name);
+                setShowPlayers(true);
+                setTeamName(team);
+            };
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!teams.length) {
+                return null;
+            }
+            return (
+                <>
+                    <Navbar />
+                    <SignUpDiv onbtnClick={onbtnClick} />
+                    {signIn && <FormComponent signInClose={signInClose} />}
+                    <div className="container py-4"
+                    >
+                        <div className="row justify-content-center g-4">
+                            {teams.map((Team) => {
+
+                                return (
+                                    <div key={Team.id} className="col-12 col-sm-6 col-md-3">
+                                        <TeamCard team={Team.team} logo={Team.logo} onTeamClick={handleTeamClick} />
+                                    </div>)
+                            })}
+                        </div>
+
+                    </div>
+                    {showPlayers && <TeamPlayers onClose={() => setShowPlayers(false)} team={teamName} />}
+                </>
+
+            )
+
+        }
+
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(<TeamPage />);
+
+    </script>
+</body>
+
+</html>

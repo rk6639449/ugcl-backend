@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Matches_React</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="js-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+    <script type="text/babel">
+
+        function Navbar() {
+            const [input, setInput] = React.useState('')
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [showFilters, setShowFilters] = React.useState(false)
+            function saveInput(e) {
+                setInput(e.target.value)
+            }
+            function handleSubmit(e) {
+                e.preventDefault();
+                setSearchTerm(input);
+
+            }
+            function onClose() {
+                setShowFilters(false);
+                setInput('');
+            }
+
+            return (
+                <>
+                    <nav className="navbar navbar-expand-lg bg-info-subtle">
+                        <div className="container-fluid">
+
+                            <a className="navbar-brand nav-link active" href="index.html"><img src="ugcl_logo.png" height="35" width="90" style={{ objectFit: "cover" }} alt="..." /></a>
+                            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span className="navbar-toggler-icon"></span>
+                            </button>
+                            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="orgcomm.html">Organizing Commitee</a>
+
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Teams.html">Teams</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="Matches.html">Matches</a>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <a className="nav-link active" href="captains.html">Captains</a>
+                                    </li>
+                                </ul>
+                                <form className="d-flex" role="search" onSubmit={handleSubmit}>
+                                    <input className="form-control me-2" type="search" placeholder="Search by Player Name or ID . . ." aria-label="Search" size="30" onChange={saveInput} value={input} />
+                                    <button className="btn btn-outline-success" type="submit" onClick={() => setShowFilters(true)}>Search</button>
+                                </form>
+                            </div>
+                        </div>
+                    </nav>
+                    {showFilters && <SearchPlayer input={searchTerm} onClose={onClose} />}
+                </>
+            )
+        }
+
+        function SearchPlayer({ input, onClose }) {
+            const [players, setPlayers] = React.useState([]);
+
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/players')
+                    .then(res => res.json())
+                    .then(data => setPlayers(data));
+            }, []);
+
+            const term = input.toLowerCase();
+
+            const filteredPlayers = players.filter(player => {
+                if (!term) return false;
+                return (
+                    player.name.toLowerCase().includes(term) ||
+                    String(player.playerId).includes(term)
+                );
+            }
+            );
+
+
+            return (
+                <div className="container py-4 px-5" style={{
+                    position: 'fixed',
+                    top: '60px',
+                    left: '100px',
+                    bottom: '40px',
+
+                    width: '90%',
+
+                    borderRadius: '5px',
+                    backgroundColor: "rgba(11, 172, 204, 0.1)",
+                    zIndex: 9999,
+
+
+                }}>
+                    <button className="btn btn-close float-end" onClick={onClose} ></button>
+                    <div className="row justify-content-center g-4" style={{
+                        height: '100%',
+                        overflowY: 'auto'
+                    }} >
+
+                        {filteredPlayers.map((player) =>
+                        (
+                            <div key={player.id} className="col-12 col-md-3 col-sm-6">
+                                <PlayerCard
+                                    name={player.name}
+                                    imageUrl={player.imageUrl}
+                                    team={player.team}
+                                />
+                            </div>
+                        )
+                        )}
+
+
+
+                    </div>
+                </div >
+
+            );
+        }
+
+        function PlayerCard({ name, imageUrl, team }) {
+            const [playerTeams, setPlayerTeams] = React.useState([]);
+            React.useEffect(() => {
+                fetch('http://localhost:3000/teams')
+                    .then(res => res.json())
+                    .then(data => setPlayerTeams(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+            if (!playerTeams.length) {
+                return null;
+            }
+            const team_s = playerTeams.find(playerTeam => playerTeam.team === team)?.team_s || '';
+            return (
+                <div className="card" style={{ height: '20em', width: '17em' }}>
+                    <img
+                        src={imageUrl || "DefCap.png"}   // fallback if no image
+                        className="card-img-top"
+                        alt={name}
+                        style={{ cursor: 'pointer', objectFit: 'cover', height: '90%' }}
+                    />
+                    <div className="card-body" style={{ display: "flex", padding: "0.25rem" }}>
+                        <img src={`./images/team_img/${team_s}.png`} width="30" height="30" />
+                        <h5 className="card-title">{name}</h5>
+                    </div>
+                </div>
+            );
+        }
+
+        function Match({ token, match }) {
+            return (
+                <>
+                    <div className="accordion-item" style={{ width: "90vw", marginTop: "10px", border: " 2px solid #ccf7ff", borderRadius: "10px" }}>
+                        <h2 className="accordion-header">
+                            <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target={`#flush-collapse${token}`} aria-expanded="false" aria-controls="flush-collapseOne">
+                                <pre>  Match {token}  <strong> {match.team1} VS {match.team2}</strong>   {match.date}</pre>
+                            </button>
+                        </h2>
+                        <div id={`flush-collapse${token}`} className="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                            <div className="accordion-body">{match.text}</div>
+                        </div>
+                    </div>
+                </>
+            )
+        }
+
+        function MatchesContainer() {
+            const [matches, setMatches] = React.useState([]);
+
+            React.useEffect(() => {
+                fetch('http://localhost:3000/matches')  // json-server endpoint
+                    .then(res => res.json())
+                    .then(data => setMatches(data))
+                    .catch(err => console.error('Fetch error:', err));
+            }, []);
+
+            if (!matches.length) {
+                return null; // or simple text: return <div>Loading matches...</div>;
+            }
+            return (
+                <>
+                    <div className="accordion accordion-flush" id="accordionFlushExample" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        {matches.map((match) => {
+                            return <Match key={match.matchId} token={match.matchId} match={match} />
+
+                        })}
+                    </div>
+                </>
+            )
+        }
+
+        function MatchesPage() {
+            return (
+                <>
+                    <Navbar />
+                    <MatchesContainer />
+                </>
+            )
+        }
+
+        const container = document.querySelector('.js-container');
+        ReactDOM.createRoot(container).render(<MatchesPage />);
+    </script>
+</body>
+
+</html>
